@@ -1,0 +1,168 @@
+# Date or Time as property for invoice, ...
+# Credit note
+# Norme inco for the products
+
+
+type Actor {
+    name: String
+    catalogs: [Catalog]
+    offers: [Offer]
+    orders: [PurchaseOrder]
+    deliveries: [DeliveryNote]
+    invoices: [Invoice]
+}
+
+interface Product {
+    name: String
+    actor: Actor!
+}
+
+type FoodProduct implements Product {
+    name: String
+    actor: Actor!
+    ingredients: [Ingredient]
+    allergens: [Allergen]
+    nutrients: [Nutrient]
+}
+
+type Ingredient {
+    product: FoodProduct
+}
+
+type Allergen {
+    name: String
+}
+
+type Nutrient {
+    name: String
+}
+
+type ProducLabel {
+    name: String
+}
+
+type Catalog {
+    name: String
+    seller: Party!
+    items: [CatalogItem!]!
+}
+
+type CatalogItem {
+    product: Product!
+}
+
+type Party {
+    actor: Actor
+    address: Address!
+    location: PointGeometry
+}
+
+type Offer {
+    name: String
+    seller: Party!
+    items: [OfferItem!]!
+}
+
+type OfferItem {
+    product: Product!
+    price: Price!
+}
+
+type PurchaseOrder {
+    number: String!
+    seller: Party
+    buyer: Party
+    items: [PurchaseOrderItem!]
+}
+
+type PurchaseOrderItem {
+    number: String!
+    date: Date!
+    product: Product!
+    quantity: Quantity!
+    price: Price
+    taxe: Taxe
+}
+
+type DeliveryNote {
+    number: String!
+    date: Date!
+    seller: Party!
+    buyer: Party!
+    carrier: Party!
+    items: [DeliveryNoteItem!]!
+}
+
+type DeliveryNoteItem {
+    product: Product!
+    quantity: Quantity!
+}
+
+type Invoice {
+    number: String!
+    date: Date!
+    seller: Party!
+    buyer: Party!
+    items: [InvoiceItem!]!
+}
+
+type InvoiceItem {
+    product: Product!
+    quantity: Quantity!
+    price: Price!
+    taxe: Taxe!
+}
+
+type Taxe {
+    percentage: Float
+}
+
+type Quantity {
+    value: Float
+    unit: String
+}
+
+type Price {
+    value: Float
+    currency: String
+}
+
+"""
+The address of a party
+"""
+#TODO how to combine this with schema.org (streetNumber issue)
+type Address {
+    formattedAddress: String
+    streetNumber: String
+    streetAddress: String
+    locality: String
+    postalCode: String
+    country: String
+}
+
+"""
+Geographic coordinates of point (geojson)
+"""
+type PointGeometry {
+    coordinates: [Float!]!
+}
+
+scalar DateTime
+scalar Date
+
+
+
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+type Query {
+  actor (name: String): Actor
+}
+
+type Mutation {
+  createActor (
+    # Name for the User item
+    name: String!): Actor!
+}
