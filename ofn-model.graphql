@@ -1,37 +1,96 @@
-"""
-/entreprises                                                            search for entreprises
+type Enterprise implements Definable & Describable {
+    id: ID!
+    officialId: String
+    key: String
+    name: String!
+    description: String
+    producer: Producer                      # /producer
+    shop: Shop                              # /shop
+    group: EnterpriseGroup                  # /group
+    members: [EnterpriseUser]             # /members
+    mainContactPoint: ContactPoint
+    address: PostalAddress!
+    images: [Image]
+    socialNetworks: [SocialNetworkContact]
+    about: String
+    hidden: Boolean
+}
 
-/producers                                                              search for producers
+type EnterpriseUser implements Ownable {
+    enterpriseId: ID!
+    userId: ID!
+    role: String
+    user: User
+}
 
-/{entrepriseId}/producer                                                get producer profile
-/{entrepriseId}/producer/products                                       search all producer products
-/{entrepriseId}/producer/productmodels?include=products                 search all producer product models and include their respective products
-/{entrepriseId}/producer/catalogs/main/items
+type User {
+    id: ID
+    firstName: String
+    lastName: String
+    email: String
+}
 
-/shops                                                                  search for shops
+type Producer implements Ownable {
+    enterpriseId: ID!
+    products: [Product]
+    productModels: [ProductModel]
+    mainCatalog: Catalog
+}
 
-/{entrepriseId}/shop/catalogs/online/items                              search shop online catalog items (default type is product)
-        ?include=offers,availability      
-/{entrepriseId}/shop/catalogs/online/items
-        ?type=productmodel&include=items.offers,items.availability       
-/{entrepriseId}/shop/suppliers/catalogs/items                           search shop suppliers catalogs product models and include their respective products
-        ?type=productmodel&include=productmodel,items.product                                
+type Shop implements Ownable {
+    enterpriseId: ID!
+    checkoutCatalog: Catalog # /shop/catalogs/checkout/items
+    backOfficeCatalog: Catalog # /shop/catalogs/backoffice/items
+    checkoutShopFront: CheckoutShopfront
+    customers: [Customer]
+    customerOrders: [Order]
+    orderCycles: [OrderCycle]
+    customerInvoices: [Invoice]
+    customerPayments: [Payment]
+    customerSubscriptions: [Subscription]
+    supplierCatalogs: [Catalog] # /shop/suppliers/catalogs/items
+    tagRules: [ShopTagRule]
+}
 
-/{entrepriseId}/shop/ordercycle/{orderCycleId}
-/{entrepriseId}/shop/ordercycle/{orderCycleId}/catalog/items
+type Customer implements Definable & Ownable & Taggable {
+    id: ID!
+    key: String
+    name: String!
+    enterpriseId: ID!
+    tags: [String]
+    shippingAddress: PostalAddress
+    billingAddress: PostalAddress
+}
 
-/{entrepriseId}/shop/subscriptions
-"""
+type EnterpriseGroup {
+    members: [EnterpriseGroupMember]
+}
+
+type EnterpriseGroupMember {
+    enterpriseId: String!
+}
 
 type MarketPlace implements Definable {
     id: ID!
     key: String
     name: String!
-    shops: [Shop]
     producers: [Producer]
-    groups: [Group]
-
+    shops: [Shop]
+    groups: [EnterpriseGroup]
+    customers: [MarketplaceCustomer]
 }
+
+type MarketplaceCustomer {
+    userId: ID
+    user: User
+    shippingAddress: PostalAddress
+    billingAddress: PostalAddress
+    orders: [Order]
+    invoices: [Invoice]
+    payments: [Payment]
+    subscriptions: [Subscription]
+}
+
 
 type Product implements Definable & Ownable {    
     id: ID!
@@ -62,18 +121,28 @@ type Catalog implements Ownable { # implements Definable & Ownable
     fees: [Fee]
 }
 
-type CatalogItem implements Ownable & Hidable {
+type CatalogItem implements Definable & Ownable & Hidable {
     id: ID!
-    catalogId: ID!
-    customerCategory: String
-    type: String # default is product, product_model exists as well
     enterpriseId: ID!
+    catalogId: ID!
+    key: String
+    name: String!
+    type: String # default is product, product_model exists as well
+    description: String
+    images: [Image]
     product: Product!
     mainOffer: Offer
     inventoryItem: InventoryItem
     hidden: Boolean!
     showForCustomerCategories: [String]
     hideForCustomerCategories: [String]
+}
+
+type Offer {
+    id: ID!
+    productId: String
+    productModelId: String
+    price: Money
 }
 
 type FeeModel implements Definable & Ownable {
@@ -91,16 +160,36 @@ type Fee {
     model: FeeModel
 }
 
-type Offer {
-    id: ID!
-    productId: String
-    productModelId: String
-    price: Money
-}
+# TODO each calculator has its own type, use any of, type is the discriminator
 
 type InventoryItem {
     catalogItemId: ID!
     quantity: Quantity
+}
+
+type Order implements Definable & Ownable {
+    id: ID!
+    key: String
+    name: String!
+    enterpriseId: ID!
+    status: String!
+    date: Date
+    buyer: TransactionParty
+    seller: TransactionParty
+    items: [OrderItem]
+    invoice: Invoice
+    payment: Payment
+    shipmentStatus: String
+    shipmentMethod: ShipmentMethod
+    paymentMethod: PaymentMethod
+}
+
+type OrderItem {
+    product: Product
+    catalogItem: CatalogItem
+    quantity: Quantity
+    offer: Offer
+    fees: [Fee]
 }
 
 type OrderCycle implements Definable & Ownable {
@@ -109,23 +198,15 @@ type OrderCycle implements Definable & Ownable {
     name: String!
     enterpriseId: ID!
     status: String!
-    opensAt: Date
-    closesAt: Date
+    beginsAt: Date
+    endsAt: Date
     inCatalogs: [Catalog]
     outCatalogs: [Catalog]
     schedules: [OrderCycleSchedule]
     orders: [Order]
 }
 
-type PaymentMethod implements Definable & Ownable {
-    id: ID!
-    key: String
-    name: String!
-    enterpriseId: ID!
-    fee: Fee
-    tags: [String]
-}
-
+# TODO how to handle order cycle schedules ...
 type OrderCycleSchedule implements Definable & Ownable {
     id: ID!
     key: String
@@ -133,29 +214,37 @@ type OrderCycleSchedule implements Definable & Ownable {
     enterpriseId: ID!
 }
 
-type Customer implements Definable & Ownable & Taggable {
+type Subscription {
+    id: ID!
+    enterpriseId: ID!
+    shopId: ID!
+    customerId: ID!
+    schedule: OrderCycleSchedule
+    status: String!
+    beginsAt: Date!
+    endsAt: Date
+    shipmentMethod: ShipmentMethod
+    paymentMethod: PaymentMethod
+    shippingAddress: PostalAddress
+    billingAddress: PostalAddress
+    items: [SubscriptionItem]
+}
+
+type SubscriptionItem {
+    product: Product
+    quantity: Quantity
+}
+
+type ShipmentMethod implements Definable & Ownable & Taggable {
     id: ID!
     key: String
     name: String!
+    description: String
     enterpriseId: ID!
-    category: String
+    active: Boolean!
+    environment: String
+    fee: Fee
     tags: [String]
-    orders: [Order]
-    invoices: [Invoice]
-    payments: [Payment]
-}
-
-type Payment implements Ownable {
-    id: ID!
-    enterpriseId: ID!
-    method: PaymentMethod
-    status: String!
-    invoiceId: ID
-    orderId: ID
-    sender: TransactionParty
-    receiver: TransactionParty
-    reference: String
-    amount: Money
 }
 
 type Invoice implements Definable & Ownable {
@@ -179,64 +268,55 @@ type InvoiceItem {
     price: Money
 }
 
-type Order implements Definable & Ownable {
+type PaymentMethod implements Definable & Ownable {
     id: ID!
     key: String
     name: String!
+    description: String
     enterpriseId: ID!
-    status: String!
-    date: Date
-    buyer: TransactionParty
-    seller: TransactionParty
-    items: [OrderItem]
-    invoice: Invoice
-    payment: Payment
-    shipmentStatus: String
-    shipmentMethod: ShipmentMethod
-    paymentMethod: PaymentMethod
-}
-
-type ShipmentSpecification implements Hidable {
-    method: ShipmentMethod
-    hidden: Boolean!
-    showForCustomerCategories: [String]
-    hideForCustomerCategories: [String]
-}
-
-type PaymentSpecification implements Hidable {
-    method: PaymentMethod
-    hidden: Boolean!
-    showForCustomerCategories: [String]
-    hideForCustomerCategories: [String]
-}
-
-type ShipmentMethod implements Definable & Ownable & Taggable {
-    id: ID!
-    key: String
-    name: String!
-    enterpriseId: ID!
+    active: Boolean!
+    environment: String
     fee: Fee
     tags: [String]
 }
 
-type TransactionParty {
-    customerId: ID
-    enterpriseId: ID
-    shopId: ID
-    name: String
-    officialId: String
-    bankAccountNumber: String
-    address: PostalAddress
-    shippingAddress: PostalAddress
-    billingAddress: PostalAddress
+type Payment implements Ownable {
+    id: ID!
+    enterpriseId: ID!
+    method: PaymentMethod
+    status: String!
+    invoiceId: ID
+    orderId: ID
+    sender: TransactionParty
+    receiver: TransactionParty
+    reference: String
+    amount: Money
 }
 
-type OrderItem {
-    product: Product
-    catalogItem: CatalogItem
-    quantity: Quantity
-    offer: Offer
-    fees: [Fee]
+type ContactPoint {
+    name: String
+    email: String
+    telephone: String
+    url: String
+}
+
+type PostalAddress {
+    street: String!
+    locality: String!
+    postCode: String!
+    countryCode: String!
+    latitude: Float!
+    longitude: Float!
+}
+
+type Image {
+    type: String # logo, promo
+    url: String
+}
+
+type SocialNetworkContact {
+    type: String
+    url: String
 }
 
 type Money {
@@ -261,26 +341,7 @@ type Unit {
     name: String
 }
 
-type Shop implements Ownable {
-    enterpriseId: ID!
-    onlineShopFront: OnlineShopfront
-    tagRules: [ShopTagRule]
-    onlineCatalog: Catalog # /shop/catalogs/main/items
-    supplierCatalogs: [Catalog] # /shop/suppliers/catalogs/items
-    orders: [Order]
-    orderCycles: [OrderCycle]
-    customers: [Customer]
-    invoices: [Invoice]
-    payments: [Payment]
-}
-
-type ShopTagRule {
-    type: String
-    customerCategoryTag: String
-    tag: String
-}
-
-type OnlineShopfront {
+type CheckoutShopfront {
     message: String
     closedMessage: String
     visibility: String
@@ -291,64 +352,41 @@ type OnlineShopfront {
     supplierReportCustomerAnonymisation: Boolean
 }
 
-type Producer implements Ownable {
-    enterpriseId: ID!
-    products: [Product]
-    productModels: [ProductModel]
-    mainCatalog: Catalog
-}
-
-# fees, users, invoice settings should go elsewhere
-type Enterprise implements Definable & Describable {
-    id: ID!
-    key: String
-    name: String!
-    description: String
-    officialId: String
-    about: String
-    hidden: Boolean
-    address: PostalAddress!
-    publicContact: Contact
-    socialNetworks: [SocialNetworkContact]
-    images: [Image]
-    producer: Producer
-    shop: Shop
-    group: Group
-}
-
-type Group {
-    members: [GroupMember]
-}
-
-type GroupMember {
-    enterpriseId: String!
-}
-
-type SocialNetworkContact {
+type ShopTagRule {
     type: String
-    url: String
+    customerCategoryTag: String
+    tag: String
 }
 
-type Contact {
+type TransactionParty {
+    customerId: ID
+    enterpriseId: ID
+    shopId: ID
     name: String
-    email: String
-    phone: String
-    website: String
-    departement: String
+    officialId: String
+    bankAccountNumber: String
+    address: PostalAddress
+    shippingAddress: PostalAddress
+    billingAddress: PostalAddress
 }
 
-type PostalAddress {
-    street: String!
-    locality: String!
-    postCode: String!
-    countryCode: String!
-    latitude: Float!
-    longitude: Float!
+type ShipmentSpecification implements Hidable {
+    method: ShipmentMethod
+    hidden: Boolean!
+    showForCustomerCategories: [String]
+    hideForCustomerCategories: [String]
 }
 
-type Image {
-    type: String # logo, promo
-    url: String
+type PaymentSpecification implements Hidable {
+    method: PaymentMethod
+    hidden: Boolean!
+    showForCustomerCategories: [String]
+    hideForCustomerCategories: [String]
+}
+
+type PaymentProvider {
+    key: String!
+    name: String!
 }
 
 interface Definable {
@@ -369,6 +407,7 @@ interface Taggable {
     tags: [String]
 }
 
+# TODO replace hidden by available
 interface Hidable {
     hidden: Boolean!
     showForCustomerCategories: [String]
@@ -393,3 +432,4 @@ type Mutation {
     createShop (name: String) : Shop
     createProducer (name: String) : Shop
 }
+
