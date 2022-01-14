@@ -1,0 +1,96 @@
+@startuml
+
+title Types - Class Diagram
+
+ProductContribution "1" *-- "1" Actor : references
+ProductContribution "1" *-- "1" Product : references
+
+Product "1" *-- "1" Category : references
+Product "1" *-- "many" Ingredient : has
+Product "1" *-- "many" Image : has
+
+Actor "1" *-- "many" Image : has
+Actor "1" *-- "1" Address : has
+Actor "1" *-- "1" Location : has
+
+Category "1" *-- "1" Classification : references
+Category "1" *-- "1" Category : parent-child
+
+class Actor {
+  name: String
+  place: Address
+  location: Location
+  images: [Image]
+  --
+  productContributions: [ProductContribution]
+}
+
+class Classification {
+    name: String
+    categories: [Category]
+}
+
+class Category {
+    name: String
+    classification: Classification
+    hierarchyLevel: Int
+    parent: Category
+    children: [Category]
+    products: [Product]
+}
+
+class Product {
+    gtin: String
+    name: String
+    description: String
+    images: [Image]
+    categories: [Category]
+    contributions: [ProductContribution]
+    ingredients: [Ingredient]
+}
+
+class Ingredient {
+    name: String
+}
+
+class ProductContribution {
+    product: Product
+    actor: Actor
+    isMain: Boolean
+    roles: [ProducContributionRoleType]
+}
+
+enum AreaType {
+    Country
+}
+
+enum ProducContributionRoleType {
+    Producer
+    Transformer
+    Packer
+}
+
+class Address {
+    street: String
+    postCode: String
+    locality: String
+    country: Area
+}
+
+class Area {
+    type: AreaType
+    code: String
+    name: String
+}
+
+class Location {
+    latitude: Float
+    longitude: Float
+}
+
+class Image {
+    url: String
+}
+
+
+@enduml
