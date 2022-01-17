@@ -3,7 +3,7 @@
 header
 DRAFT
 Authors: Olivier Wouters
-Version: 0.1.0
+Version: 0.1.1
 endheader
 
 legend right
@@ -14,123 +14,123 @@ endlegend
 
 title Product Platform Diagram
 
-package ProductService {
-
-  class Product << (A,orange) >> {
-    id: Id
-    familyId: Id
-    gtin: String
-    name: String
-    description: String
-    images: [Image]
-  }
+namespace OpenBatra {
   
-  Product *-right-{ ProductContribution : contributions
-  Product *-down-{ ProductCategory :  categories
-  Product::familyId *.left. ProductFamily
-  Product *--{ ProductIngredient : ingredients
+  namespace ActorService {
   
-  class ProductContribution << (V,lightgreen) >> {
-      actorId: Id
-      isMain: Boolean
-      roles: [ProducContributionRoleType]
-  }
-  
-  ProductContribution -down[hidden]- ProducContributionRoleType
-  
-  enum ProducContributionRoleType {
-    Producer
-    Transformer
-    Packer
-  }
-  
-  class ProductCategory << (V,lightgreen) >> {
-    categoryKey: String
-  }
-  
-  class ProductIngredient << (V,lightgreen) >> {
+    class Actor << (A,orange) >> {
+      key: String
       name: String
+      images: [Image]
+    }
+    
+    Actor *-down- Address : address
+    Actor *-right- Location : location
+    
+    class Address << (V,lightgreen) >> {
+      street: String
+      postCode: String
+      locality: String
+    }
+    
+    Address::country *-right- AddressArea : country
+    
+    class AddressArea << (V,lightgreen) >> {
+      code: String
+      name: String
+    }
+    
+    AddressArea::code *.right. Area
+    
+    class Area << (A,orange) >> {
+      type: AreaType
+      code: String
+      name: String
+    }
+    
+    Area .up[hidden]. AreaType
+    
+    enum AreaType {
+        Country
+    }
+    
+    class Location << (V,lightgreen) >> {
+        latitude: Float
+        longitude: Float
+    }
+  
   }
   
-  class ProductFamily << (A,orange) >> {
-    name: String
-    description: String
-    images: [Image]
-    categories: [ProductCategory]
-    contributions: [ProductContribution]
-    ingredients: [ProductIngredient]
-  }
-}
-
-ProductService -right[hidden]- ActorService
-
-package ActorService {
-
-  ProductContribution::actorId *.. Actor
-
-  class Actor << (A,orange) >> {
-    key: String
-    name: String
-    images: [Image]
+  namespace ClassificationService {
+    
+    class Classification << (A,orange) >> {
+      type: String
+      key: String
+      name: String
+    }
+    
+    class Category << (A,orange) >> {
+      key: String
+      name: String
+      classificationKey: String
+      hierarchyLevel: Int
+      parentKey: String
+    }
+    
+    Category::classificationKey *.left. Classification
+    Category *.right. Category : parent-child
   }
   
-  Actor *-down- Address : address
-  Actor *-right- Location : location
+  namespace ProductService {
   
-  class Address << (V,lightgreen) >> {
-    street: String
-    postCode: String
-    locality: String
-  }
+    class Product << (A,orange) >> {
+      id: Id
+      familyId: Id
+      gtin: String
+      name: String
+      description: String
+      images: [Image]
+    }
+    
+    Product *-right-{ ProductContribution : contributions
+    Product *-down-{ ProductCategory :  categories
+    Product::familyId *.left. ProductFamily
+    Product *--{ ProductIngredient : ingredients
+    
+    class ProductContribution << (V,lightgreen) >> {
+        actorId: Id
+        isMain: Boolean
+        roles: [ProducContributionRoleType]
+    }
+    
+   ProductContribution::actorId *..  OpenBatra.ActorService.Actor
+    
+    ProductContribution -down[hidden]- ProducContributionRoleType
+    
+    enum ProducContributionRoleType {
+      Producer
+      Transformer
+      Packer
+    }
+    
+    class ProductCategory << (V,lightgreen) >> {
+      categoryKey: String
+    }
   
-  Address::country *-right- AddressArea : country
-  
-  class AddressArea << (V,lightgreen) >> {
-    code: String
-    name: String
-  }
-  
-  AddressArea::code *.right. Area
-  
-  class Area << (A,orange) >> {
-    type: AreaType
-    code: String
-    name: String
-  }
-  
-  Area .up[hidden]. AreaType
-  
-  enum AreaType {
-      Country
-  }
-  
-  class Location << (V,lightgreen) >> {
-      latitude: Float
-      longitude: Float
-  }
-
-}
-
-
-package ClassificationService {
-
-  ProductCategory *.down. Category
-  
-  class Classification << (A,orange) >> {
-    type: String
-    key: String
-    name: String
-  }
-  
-  Category::classificationKey *.left. Classification
-  Category *.right. Category : parent-child
-  
-  class Category << (A,orange) >> {
-    key: String
-    name: String
-    classificationKey: Classification
-    hierarchyLevel: Int
-    parentKey: String
+    ProductCategory::categoryKey *.down. OpenBatra.ClassificationService.Category
+    
+    class ProductIngredient << (V,lightgreen) >> {
+        name: String
+    }
+    
+    class ProductFamily << (A,orange) >> {
+      name: String
+      description: String
+      images: [Image]
+      categories: [ProductCategory]
+      contributions: [ProductContribution]
+      ingredients: [ProductIngredient]
+    }
   }
 }
 
