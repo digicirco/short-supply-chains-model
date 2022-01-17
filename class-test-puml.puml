@@ -1,96 +1,124 @@
 @startuml
 
+header
+DRAFT
+Authors: Olivier Wouters
+Version: 0.1.0
+endheader
+
 title Types - Class Diagram
 
-ProductContribution "1" *-- "1" Actor : references
-ProductContribution "1" *-- "1" Product : references
+package ProductAggregate <<Cloud>> {
 
-Product "1" *-- "1" Category : references
-Product "1" *-- "many" Ingredient : has
-Product "1" *-- "many" Image : has
-
-Actor "1" *-- "many" Image : has
-Actor "1" *-- "1" Address : has
-Actor "1" *-- "1" Location : has
-
-Category "1" *-- "1" Classification : references
-Category "1" *-- "1" Category : parent-child
-
-class Actor {
-  name: String
-  place: Address
-  location: Location
-  images: [Image]
-  --
-  productContributions: [ProductContribution]
-}
-
-class Classification {
-    name: String
-    categories: [Category]
-}
-
-class Category {
-    name: String
-    classification: Classification
-    hierarchyLevel: Int
-    parent: Category
-    children: [Category]
-    products: [Product]
-}
-
-class Product {
-    gtin: String
-    name: String
-    description: String
-    images: [Image]
-    categories: [Category]
-    contributions: [ProductContribution]
-    ingredients: [Ingredient]
-}
-
-class Ingredient {
-    name: String
-}
-
-class ProductContribution {
-    product: Product
-    actor: Actor
-    isMain: Boolean
-    roles: [ProducContributionRoleType]
-}
-
-enum AreaType {
-    Country
-}
-
-enum ProducContributionRoleType {
+  class Product {
+      gtin: String
+      name: String
+      description: String
+      images: [Image]
+      categories: [ProductCategory]
+      contributions: [ProductContribution]
+      ingredients: [ProductIngredient]
+  }
+  
+  Product *-right-{ ProductContribution
+  Product *-down-{ ProductCategory
+  Product *-left-{ ProductIngredient
+  
+  class ProductContribution {
+      actorKey: String
+      isMain: Boolean
+      roles: [ProducContributionRoleType]
+  }
+  
+  ProductContribution -down[hidden]- ProducContributionRoleType
+  
+  enum ProducContributionRoleType {
     Producer
     Transformer
     Packer
+  }
+  
+  class ProductCategory {
+    categoryKey: String
+  }
+  
+  class ProductIngredient {
+      name: String
+  }
 }
 
-class Address {
+ProductAggregate -right[hidden]- ActorAggregate
+
+package ActorAggregate <<Cloud>> {
+
+  ProductContribution::actorKey .. Actor
+
+  class Actor {
+    key: String
+    name: String
+    place: Address
+    location: Location
+    images: [Image]
+  }
+  
+  Actor *-down- Address
+  Actor *-right- Location
+  
+  class Address {
     street: String
     postCode: String
     locality: String
-    country: Area
-}
-
-class Area {
+    country: AddressArea
+  }
+  
+  Address::country *-right- AddressArea
+  
+  class AddressArea {
+    code: String
+    name: String
+  }
+  
+  AddressArea::code *.right. Area
+  
+  class Area {
     type: AreaType
     code: String
     name: String
+  }
+  
+  Area .up[hidden]. AreaType
+  
+  enum AreaType {
+      Country
+  }
+  
+  class Location {
+      latitude: Float
+      longitude: Float
+  }
+
 }
 
-class Location {
-    latitude: Float
-    longitude: Float
-}
 
-class Image {
-    url: String
-}
+package ClassificationService {
 
+  ProductCategory .down. Category
+  
+  class Classification {
+    key: String
+    name: String
+  }
+  
+  Category::classificationKey *.left. Classification
+  Category *.right. Category : parent-child
+  
+  class Category {
+    key: String
+    name: String
+    classificationKey: Classification
+    hierarchyLevel: Int
+    parentKey: String
+  }
+}
 
 @enduml
