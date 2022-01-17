@@ -6,26 +6,32 @@ Authors: Olivier Wouters
 Version: 0.1.0
 endheader
 
-title Types - Class Diagram
+legend right
+    | Color | Type |
+    |<#ff7f00>| A for Aggregate|
+    |<#90ee90>| V for ValueObject|
+endlegend
 
-package ProductAggregate <<Cloud>> {
+title Product Platform Diagram
 
-  class Product {
-      gtin: String
-      name: String
-      description: String
-      images: [Image]
-      categories: [ProductCategory]
-      contributions: [ProductContribution]
-      ingredients: [ProductIngredient]
+package ProductService {
+
+  class Product << (A,orange) >> {
+    id: Id
+    familyId: Id
+    gtin: String
+    name: String
+    description: String
+    images: [Image]
   }
   
-  Product *-right-{ ProductContribution
-  Product *-down-{ ProductCategory
-  Product *-left-{ ProductIngredient
+  Product *-right-{ ProductContribution : contributions
+  Product *-down-{ ProductCategory :  categories
+  Product::familyId *.left. ProductFamily
+  Product *--{ ProductIngredient : ingredients
   
-  class ProductContribution {
-      actorKey: String
+  class ProductContribution << (V,lightgreen) >> {
+      actorId: Id
       isMain: Boolean
       roles: [ProducContributionRoleType]
   }
@@ -38,49 +44,55 @@ package ProductAggregate <<Cloud>> {
     Packer
   }
   
-  class ProductCategory {
+  class ProductCategory << (V,lightgreen) >> {
     categoryKey: String
   }
   
-  class ProductIngredient {
+  class ProductIngredient << (V,lightgreen) >> {
       name: String
+  }
+  
+  class ProductFamily << (A,orange) >> {
+    name: String
+    description: String
+    images: [Image]
+    categories: [ProductCategory]
+    contributions: [ProductContribution]
+    ingredients: [ProductIngredient]
   }
 }
 
-ProductAggregate -right[hidden]- ActorAggregate
+ProductService -right[hidden]- ActorService
 
-package ActorAggregate <<Cloud>> {
+package ActorService {
 
-  ProductContribution::actorKey .. Actor
+  ProductContribution::actorId *.. Actor
 
-  class Actor {
+  class Actor << (A,orange) >> {
     key: String
     name: String
-    place: Address
-    location: Location
     images: [Image]
   }
   
-  Actor *-down- Address
-  Actor *-right- Location
+  Actor *-down- Address : address
+  Actor *-right- Location : location
   
-  class Address {
+  class Address << (V,lightgreen) >> {
     street: String
     postCode: String
     locality: String
-    country: AddressArea
   }
   
-  Address::country *-right- AddressArea
+  Address::country *-right- AddressArea : country
   
-  class AddressArea {
+  class AddressArea << (V,lightgreen) >> {
     code: String
     name: String
   }
   
   AddressArea::code *.right. Area
   
-  class Area {
+  class Area << (A,orange) >> {
     type: AreaType
     code: String
     name: String
@@ -92,7 +104,7 @@ package ActorAggregate <<Cloud>> {
       Country
   }
   
-  class Location {
+  class Location << (V,lightgreen) >> {
       latitude: Float
       longitude: Float
   }
@@ -102,9 +114,10 @@ package ActorAggregate <<Cloud>> {
 
 package ClassificationService {
 
-  ProductCategory .down. Category
+  ProductCategory *.down. Category
   
-  class Classification {
+  class Classification << (A,orange) >> {
+    type: String
     key: String
     name: String
   }
@@ -112,7 +125,7 @@ package ClassificationService {
   Category::classificationKey *.left. Classification
   Category *.right. Category : parent-child
   
-  class Category {
+  class Category << (A,orange) >> {
     key: String
     name: String
     classificationKey: Classification
