@@ -3,7 +3,7 @@
 header
 DRAFT
 Authors: Olivier Wouters
-Version: 0.7.0
+Version: 0.8.0
 endheader
 
 legend right
@@ -50,6 +50,17 @@ namespace Main {
       longitude: Float
   }
   
+  class Quantity << (V,lightgreen) >> {
+    value: Float
+  }
+  
+  Quantity *-- Unit : unit
+  
+  class Unit << (V,lightgreen) >> {
+    code: String
+    symbol: String
+    name: String
+  }
   
   namespace ActorService {
   
@@ -104,14 +115,17 @@ namespace Main {
       ingredientsStatement: String
     }
     
-    Product *-- ProductBrand : brand
+    Product *-up- ProductBrand : brand
     Product *-right-{ ProductContribution : contributions
     Product *-right-{ ProductCategory :  categories
-    Product::familyId *.left. ProductFamily : family
+    Product::familyId *.up. ProductFamily : family
     Product *--{ ProductIngredient : ingredients
     Product *--{ ProductAllergen : allergens
-    Product *--{ ProductPackaging : packagings
-    Product *--{ ProductScoring : scorings
+    Product *--{ ProductNutrientDailyValueIntakeReference : nutrientDailyValueIntakeReference
+    Product *--{ ProductNutrientReference : nutrientPerBaseReference
+    Product *--{ ProductNutrientValue : nutrientPerBaseValues
+    Product *-left-{ ProductPackaging : packagings
+    Product *-left-{ ProductScoring : scorings
     
     class ProductBrand << (V,lightgreen) >> { 
       name: String
@@ -160,6 +174,24 @@ namespace Main {
       "code": String
       "lessThanPercentage": Float
     }
+    
+    class ProductNutrientDailyValueIntakeReference {
+      lifestage: PersonLifestage
+    }
+    
+    ProductNutrientDailyValueIntakeReference *--{ ProductNutrientValue : nutrientValues
+    
+    class ProductNutrientReference {
+      statement: String
+    }
+    
+    ProductNutrientReference *-- Main.Quantity
+    
+    class ProductNutrientValue {
+      key: String,
+    }
+    
+    ProductNutrientValue *-- Main.Quantity
     
     class ProductPackaging << (V,lightgreen) >> {
       name: String
