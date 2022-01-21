@@ -3,7 +3,7 @@
 header
 DRAFT
 Authors: Olivier Wouters
-Version: 0.6.0
+Version: 0.7.0
 endheader
 
 legend right
@@ -31,7 +31,7 @@ namespace Main {
     name: String
   }
   
-  AddressArea::code *.. Area
+  AddressArea::code *.right. Area
   
   class Area << (A,orange) >> {
     type: AreaType
@@ -104,13 +104,18 @@ namespace Main {
       ingredientsStatement: String
     }
     
+    Product *-- ProductBrand : brand
     Product *-right-{ ProductContribution : contributions
-    Product *-down-{ ProductCategory :  categories
+    Product *-right-{ ProductCategory :  categories
     Product::familyId *.left. ProductFamily : family
     Product *--{ ProductIngredient : ingredients
     Product *--{ ProductAllergen : allergens
     Product *--{ ProductPackaging : packagings
     Product *--{ ProductScoring : scorings
+    
+    class ProductBrand << (V,lightgreen) >> { 
+      name: String
+    }
     
     class ProductContribution << (V,lightgreen) >> {
         actorId: Id
@@ -149,7 +154,7 @@ namespace Main {
       name: String
     }
     
-    ProductAllergens *-- ProductLevelOfContainment: level
+    ProductAllergen *-- ProductLevelOfContainment: level
     
     class ProductLevelOfContainment << (V,lightgreen) >> {
       "code": String
