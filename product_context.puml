@@ -3,7 +3,7 @@
 header
 DRAFT
 Authors: Olivier Wouters
-Version: 0.8.0
+Version: 0.9.0
 endheader
 
 legend right
@@ -31,7 +31,7 @@ namespace Main {
     name: String
   }
   
-  AddressArea::code *.right. Area
+  AddressArea::code *.. Area
   
   class Area << (A,orange) >> {
     type: AreaType
@@ -39,7 +39,7 @@ namespace Main {
     name: String
   }
   
-  Area .up[hidden]. AreaType
+  Area .[hidden]. AreaType
   
   enum AreaType {
       Country
@@ -99,63 +99,12 @@ namespace Main {
       parentKey: String
     }
     
-    Category::classificationKey *.left. Classification
-    Category *.right. Category : parent-child
+    Category::classificationKey *.. Classification
+    Category *.. Category : parent-child
   }
   
-  namespace ProductService {
+   namespace Food {
   
-    class Product << (A,orange) >> {
-      id: Id
-      familyId: Id
-      gtin: String
-      name: String
-      description: String
-      images: [Image]
-      ingredientsStatement: String
-    }
-    
-    Product *-up- ProductBrand : brand
-    Product *-right-{ ProductContribution : contributions
-    Product *-right-{ ProductCategory :  categories
-    Product::familyId *.up. ProductFamily : family
-    Product *--{ ProductIngredient : ingredients
-    Product *--{ ProductAllergen : allergens
-    Product *--{ ProductNutrientDailyValueIntakeReference : nutrientDailyValueIntakeReference
-    Product *--{ ProductNutrientReference : nutrientPerBaseReference
-    Product *--{ ProductNutrientValue : nutrientPerBaseValues
-    Product *-left-{ ProductPackaging : packagings
-    Product *-left-{ ProductScoring : scorings
-    
-    class ProductBrand << (V,lightgreen) >> { 
-      name: String
-    }
-    
-    class ProductContribution << (V,lightgreen) >> {
-        actorId: Id
-        isMain: Boolean
-    }
-    
-   ProductContribution::actorId *..  Main.ActorService.Actor : actor
-    
-    ProductContribution *-down-{ ProductContributionRole : roles
-    
-    enum ProductContributionRoleType {
-      Producer
-      Transformer
-      Packer
-    }
-    
-    class ProductContributionRole << (V,lightgreen) >> {
-      type: ProductContributionRoleType
-    }
-    
-    class ProductCategory << (V,lightgreen) >> {
-      categoryKey: String
-    }
-  
-    ProductCategory::categoryKey *.down. Main.ClassificationService.Category
-    
     class ProductIngredient << (V,lightgreen) >> {
         name: String
         allergenCodes: [String]
@@ -192,6 +141,64 @@ namespace Main {
     }
     
     ProductNutrientValue *-- Main.Quantity
+  
+  }
+  
+  namespace ProductService {
+  
+    class Product << (A,orange) >> {
+      id: Id
+      familyId: Id
+      gtin: String
+      name: String
+      description: String
+      images: [Image]
+      ingredientsStatement: String
+    }
+    
+    Product *-- ProductBrand : brand
+    Product *--{ ProductContribution : contributions
+    Product *--{ ProductCategory :  categories
+    Product::familyId *.. ProductFamily : family
+    
+    Product *--{ ProductPackaging : packagings
+    Product *--{ ProductScoring : scorings
+    
+    Product *--{ Main.Food.ProductIngredient : ingredients
+    Product *--{ Main.Food.ProductAllergen : allergens
+    Product *--{ Main.Food.ProductNutrientDailyValueIntakeReference : nutrientDailyValueIntakeReference
+    Product *--{ Main.Food.ProductNutrientReference : nutrientPerBaseReference
+    Product *--{ Main.Food.ProductNutrientValue : nutrientPerBaseValues
+    
+    class ProductBrand << (V,lightgreen) >> { 
+      name: String
+    }
+    
+    class ProductContribution << (V,lightgreen) >> {
+        actorId: Id
+        isMain: Boolean
+    }
+    
+   ProductContribution::actorId *.. Main.ActorService.Actor : actor
+    
+    ProductContribution *--{ ProductContributionRole : roles
+    
+    enum ProductContributionRoleType {
+      Producer
+      Transformer
+      Packer
+    }
+    
+    class ProductContributionRole << (V,lightgreen) >> {
+      type: ProductContributionRoleType
+    }
+    
+    class ProductCategory << (V,lightgreen) >> {
+      categoryKey: String
+    }
+  
+    ProductCategory::categoryKey *.. Main.ClassificationService.Category
+    
     
     class ProductPackaging << (V,lightgreen) >> {
       name: String
@@ -226,6 +233,7 @@ namespace Main {
       ingredients: [ProductIngredient]
     }
   }
+  
 }
 
 @enduml
