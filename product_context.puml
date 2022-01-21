@@ -3,7 +3,7 @@
 header
 DRAFT
 Authors: Olivier Wouters
-Version: 0.3.0
+Version: 0.4.0
 endheader
 
 legend right
@@ -107,6 +107,7 @@ namespace Main {
     Product *-down-{ ProductCategory :  categories
     Product::familyId *.left. ProductFamily : family
     Product *--{ ProductIngredient : ingredients
+    Product *--{ ProductPackaging : packagings
     
     class ProductContribution << (V,lightgreen) >> {
         actorId: Id
@@ -135,6 +136,15 @@ namespace Main {
     
     class ProductIngredient << (V,lightgreen) >> {
         name: String
+    }
+    
+    class ProductPackaging << (V,lightgreen) >> {
+      name: String
+      shape: [ProductPackagingShape]
+      recyclingSchemes: [ProductPackagingRecyclingScheme]
+      recyclingProcessTypes": [ProductPackagingRecyclingProcessType]
+      material: [ProductPackagingMaterial]
+      functions: [ProductPackagingFunction]
     }
     
     class ProductFamily << (A,orange) >> {
