@@ -3,7 +3,7 @@
 header
 DRAFT
 Authors: Olivier Wouters
-Version: 0.2.0
+Version: 0.3.0
 endheader
 
 legend right
@@ -105,23 +105,26 @@ namespace Main {
     
     Product *-right-{ ProductContribution : contributions
     Product *-down-{ ProductCategory :  categories
-    Product::familyId *.left. ProductFamily
+    Product::familyId *.left. ProductFamily : family
     Product *--{ ProductIngredient : ingredients
     
     class ProductContribution << (V,lightgreen) >> {
         actorId: Id
         isMain: Boolean
-        roles: [ProducContributionRoleType]
     }
     
-   ProductContribution::actorId *..  Main.ActorService.Actor
+   ProductContribution::actorId *..  Main.ActorService.Actor : actor
     
-    ProductContribution -down[hidden]- ProducContributionRoleType
+    ProductContribution *-down-{ ProductContributionRole : roles
     
-    enum ProducContributionRoleType {
+    enum ProductContributionRoleType {
       Producer
       Transformer
       Packer
+    }
+    
+    class ProductContributionRole << (V,lightgreen) >> {
+      type: ProductContributionRoleType
     }
     
     class ProductCategory << (V,lightgreen) >> {
