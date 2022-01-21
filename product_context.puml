@@ -3,7 +3,7 @@
 header
 DRAFT
 Authors: Olivier Wouters
-Version: 0.10.0
+Version: 0.11.0
 endheader
 
 legend right
@@ -156,6 +156,8 @@ namespace Main {
       description: String
       images: [Image]
       ingredientsStatement: String
+      nutrientPerServingReference: ProductNutrientReference
+      nutrientPerServingValues: [ProductNutrientValue]
     }
     
     Product *-left- ProductBrand : brand
