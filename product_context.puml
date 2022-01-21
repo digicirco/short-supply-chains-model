@@ -3,7 +3,7 @@
 header
 DRAFT
 Authors: Olivier Wouters
-Version: 0.9.0
+Version: 0.10.0
 endheader
 
 legend right
@@ -103,48 +103,50 @@ namespace Main {
     Category *.. Category : parent-child
   }
   
-   namespace Food {
-  
-    class ProductIngredient << (V,lightgreen) >> {
-        name: String
-        allergenCodes: [String]
-    }
-    
-    ProductIngredient::allergenCodes *.. ProductAllergen
-    
-    class ProductAllergen << (V,lightgreen) >> {
-      code: String
-      name: String
-    }
-    
-    ProductAllergen *-- ProductLevelOfContainment: level
-    
-    class ProductLevelOfContainment << (V,lightgreen) >> {
-      "code": String
-      "lessThanPercentage": Float
-    }
-    
-    class ProductNutrientDailyValueIntakeReference {
-      lifestage: PersonLifestage
-    }
-    
-    ProductNutrientDailyValueIntakeReference *--{ ProductNutrientValue : nutrientValues
-    
-    class ProductNutrientReference {
-      statement: String
-    }
-    
-    ProductNutrientReference *-- Main.Quantity
-    
-    class ProductNutrientValue {
-      key: String,
-    }
-    
-    ProductNutrientValue *-- Main.Quantity
-  
-  }
+   
   
   namespace ProductService {
+  
+    namespace Food {
+    
+      class ProductIngredient << (V,lightgreen) >> {
+          name: String
+          allergenCodes: [String]
+      }
+      
+      ProductIngredient::allergenCodes *.. ProductAllergen
+      
+      class ProductAllergen << (V,lightgreen) >> {
+        code: String
+        name: String
+      }
+      
+      ProductAllergen *-- ProductLevelOfContainment: level
+      
+      class ProductLevelOfContainment << (V,lightgreen) >> {
+        "code": String
+        "lessThanPercentage": Float
+      }
+      
+      class ProductNutrientDailyValueIntakeReference {
+        lifestage: PersonLifestage
+      }
+      
+      ProductNutrientDailyValueIntakeReference *--{ ProductNutrientValue : nutrientValues
+      
+      class ProductNutrientReference {
+        statement: String
+      }
+      
+      ProductNutrientReference *-- Main.Quantity
+      
+      class ProductNutrientValue {
+        key: String,
+      }
+      
+      ProductNutrientValue *-- Main.Quantity
+    
+    }
   
     class Product << (A,orange) >> {
       id: Id
@@ -156,19 +158,19 @@ namespace Main {
       ingredientsStatement: String
     }
     
-    Product *-- ProductBrand : brand
-    Product *--{ ProductContribution : contributions
-    Product *--{ ProductCategory :  categories
-    Product::familyId *.. ProductFamily : family
+    Product *-left- ProductBrand : brand
+    Product *-right-{ ProductContribution : contributions
+    Product *-right-{ ProductCategory :  categories
+    Product::familyId *.up. ProductFamily : family
     
-    Product *--{ ProductPackaging : packagings
-    Product *--{ ProductScoring : scorings
+    Product *-up-{ ProductPackaging : packagings
+    Product *-left-{ ProductScoring : scorings
     
-    Product *--{ Main.Food.ProductIngredient : ingredients
-    Product *--{ Main.Food.ProductAllergen : allergens
-    Product *--{ Main.Food.ProductNutrientDailyValueIntakeReference : nutrientDailyValueIntakeReference
-    Product *--{ Main.Food.ProductNutrientReference : nutrientPerBaseReference
-    Product *--{ Main.Food.ProductNutrientValue : nutrientPerBaseValues
+    Product *--{ Main.ProductService.Food.ProductIngredient : ingredients
+    Product *--{ Main.ProductService.Food.ProductAllergen : allergens
+    Product *--{ Main.ProductService.Food.ProductNutrientDailyValueIntakeReference : nutrientDailyValueIntakeReference
+    Product *--{ Main.ProductService.Food.ProductNutrientReference : nutrientPerBaseReference
+    Product *--{ Main.ProductService.Food.ProductNutrientValue : nutrientPerBaseValues
     
     class ProductBrand << (V,lightgreen) >> { 
       name: String
