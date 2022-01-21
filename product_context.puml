@@ -3,7 +3,7 @@
 header
 DRAFT
 Authors: Olivier Wouters
-Version: 0.1.1
+Version: 0.2.0
 endheader
 
 legend right
@@ -12,53 +12,64 @@ legend right
     |<#90ee90>| V for ValueObject|
 endlegend
 
-title Product Platform Diagram
+title Product context
 
-namespace OpenBatra {
+namespace Main {
+  
+  class Address << (V,lightgreen) >> {
+    street: String
+    postCode: String
+    locality: String
+  }
+  
+  Address *-- AddressArea : country
+  Address *-- AddressArea : administrativeLevel1
+  Address *-- AddressArea : administrativeLevel2
+  
+  class AddressArea << (V,lightgreen) >> {
+    code: String
+    name: String
+  }
+  
+  AddressArea::code *.. Area
+  
+  class Area << (A,orange) >> {
+    type: AreaType
+    code: String
+    name: String
+  }
+  
+  Area .up[hidden]. AreaType
+  
+  enum AreaType {
+      Country
+  }
+  
+  class Location << (V,lightgreen) >> {
+      latitude: Float
+      longitude: Float
+  }
+  
   
   namespace ActorService {
   
     class Actor << (A,orange) >> {
+      id: Id
       key: String
       name: String
       images: [Image]
     }
     
-    Actor *-down- Address : address
-    Actor *-right- Location : location
+    Actor *-- Main.Address : address
+    Actor *-- Main.Location : location
     
-    class Address << (V,lightgreen) >> {
-      street: String
-      postCode: String
-      locality: String
-    }
-    
-    Address::country *-right- AddressArea : country
-    
-    class AddressArea << (V,lightgreen) >> {
-      code: String
-      name: String
-    }
-    
-    AddressArea::code *.right. Area
-    
-    class Area << (A,orange) >> {
-      type: AreaType
-      code: String
-      name: String
-    }
-    
-    Area .up[hidden]. AreaType
-    
-    enum AreaType {
-        Country
-    }
-    
-    class Location << (V,lightgreen) >> {
-        latitude: Float
-        longitude: Float
+    class Membership << (A,orange) >> {
+      groupId: Id
+      memberId: Id
     }
   
+    Actor *..{ Membership : members
+    Actor *..{ Membership : groups
   }
   
   namespace ClassificationService {
@@ -103,7 +114,7 @@ namespace OpenBatra {
         roles: [ProducContributionRoleType]
     }
     
-   ProductContribution::actorId *..  OpenBatra.ActorService.Actor
+   ProductContribution::actorId *..  Main.ActorService.Actor
     
     ProductContribution -down[hidden]- ProducContributionRoleType
     
@@ -117,7 +128,7 @@ namespace OpenBatra {
       categoryKey: String
     }
   
-    ProductCategory::categoryKey *.down. OpenBatra.ClassificationService.Category
+    ProductCategory::categoryKey *.down. Main.ClassificationService.Category
     
     class ProductIngredient << (V,lightgreen) >> {
         name: String
