@@ -1,0 +1,330 @@
+@startuml
+
+header
+DRAFT
+Authors: Olivier Wouters
+Version: 0.1.0
+endheader
+
+legend right
+    | Color | Type |
+    |<#ff7f00>| A for Aggregate|
+    |<#90ee90>| V for ValueObject|
+endlegend
+
+title Order context
+
+namespace Main {
+  
+  class Address << (V,lightgreen) >> {
+    street: String
+    postCode: String
+    locality: String
+    country: AddressArea
+    administrativeLevel1: AddressArea
+    administrativeLevel2: AddressArea
+  }
+  
+  Address *-- AddressArea : "areas"
+  
+  class AddressArea << (V,lightgreen) >> {
+    code: String
+    name: String
+  }
+  
+  AddressArea::code *.. Area
+  
+  class Area << (A,orange) >> {
+    type: AreaType
+    code: String
+    name: String
+  }
+  
+  Area .[hidden]. AreaType
+  
+  enum AreaType {
+      Country
+  }
+  
+  class Location << (V,lightgreen) >> {
+      type: String
+      coordinates: [Float]
+  }
+  
+  class Quantity << (V,lightgreen) >> {
+    value: Float
+  }
+  
+  Quantity *-- Unit : unit
+  
+  class Unit << (V,lightgreen) >> {
+    code: String
+    symbol: String
+    name: String
+  }
+  
+  namespace ActorService {
+  
+    class Actor << (A,orange) >> {
+      id: Id
+      key: String
+      name: String
+      images: [Image]
+      address: Address
+      location: Location
+    }
+    
+    class Membership << (A,orange) >> {
+      groupId: Id
+      memberId: Id
+    }
+  
+    Actor *..{ Membership : members
+    Actor *..{ Membership : groups
+  }
+  
+  namespace ClassificationService {
+    
+    class Classification << (A,orange) >> {
+      type: String
+      key: String
+      name: String
+    }
+    
+    class Category << (A,orange) >> {
+      key: String
+      name: String
+      classificationKey: String
+      hierarchyLevel: Int
+      parentKey: String
+    }
+    
+    Category::classificationKey *.. Classification
+    Category *.. Category : parent-child
+  }
+  
+  namespace ProductService {
+  
+    namespace Food {
+    
+      class ProductIngredient << (V,lightgreen) >> {
+          name: String
+          allergenCodes: [String]
+      }
+      
+      ProductIngredient::allergenCodes *.. ProductAllergen
+      
+      class ProductAllergen << (V,lightgreen) >> {
+        code: String
+        name: String
+      }
+      
+      ProductAllergen *-- ProductLevelOfContainment: level
+      
+      class ProductLevelOfContainment << (V,lightgreen) >>
+      {
+        code: String
+        lessThanPercentage: Float
+      }
+      
+      class ProductNutrientDailyValueIntakeReference {
+        lifestage: PersonLifestage
+      }
+      
+      ProductNutrientDailyValueIntakeReference *--{ ProductNutrientValue : nutrientValues
+      
+      class ProductNutrientReference {
+        statement: String
+        quantity: Quantity
+      }
+      
+      class ProductNutrientValue {
+        key: String,
+        quantity: Quantity
+      }
+    
+    }
+  
+    class Product << (A,orange) >> {
+      id: Id
+      gtin: String
+      name: String
+      description: String
+      images: [Image]
+      ingredientsStatement: String
+      nutrientPerServingReference: ProductNutrientReference
+      nutrientPerServingValues: [ProductNutrientValue]
+    }
+    
+    Product *-- ProductBrand : brand
+    Product *--{ ProductContribution : contributions
+    Product *--{ ProductCategory :  categories
+    
+    Product *--{ ProductPackaging : packagings
+    Product *--{ ProductScoring : scorings
+    
+    Product *--{ Main.ProductService.Food.ProductIngredient : ingredients
+    Product *--{ Main.ProductService.Food.ProductAllergen : allergens
+    Product *--{ Main.ProductService.Food.ProductNutrientDailyValueIntakeReference : nutrientDailyValueIntakeReference
+    Product *--{ Main.ProductService.Food.ProductNutrientReference : nutrientPerBaseReference
+    Product *--{ Main.ProductService.Food.ProductNutrientValue : nutrientPerBaseValues
+    
+    class ProductBrand << (V,lightgreen) >> { 
+      name: String
+    }
+    
+    class ProductContribution << (V,lightgreen) >> {
+        actorId: Id
+        productFamilyId: Id
+        isMain: Boolean
+    }
+    
+    ProductContribution::actorId *.. Main.ActorService.Actor : actor
+    ProductContribution *--{ ProductContributionRole : roles
+    ProductContribution::familyId *.up. ProductFamily : family
+    
+    enum ProductContributionRoleType {
+      Producer
+      Transformer
+      Packer
+    }
+    
+    class ProductContributionRole << (V,lightgreen) >> {
+      type: ProductContributionRoleType
+    }
+    
+    class ProductCategory << (V,lightgreen) >> {
+      categoryKey: String
+    }
+  
+    ProductCategory::categoryKey *.. Main.ClassificationService.Category
+    
+    
+    class ProductPackaging << (V,lightgreen) >> {
+      name: String
+      shape: [ProductPackagingShape]
+      recyclingSchemes: [ProductPackagingRecyclingScheme]
+      recyclingProcessTypes: [ProductPackagingRecyclingProcessType]
+      material: [ProductPackagingMaterial]
+      functions: [ProductPackagingFunction]
+    }
+    
+    class ProductScoring << (V,lightgreen) >> {
+      
+    }
+    
+    ProductScoring *-- ProductScoringRating : rating
+    ProductScoring *-- ProductScoringMechanism : mechanism
+    
+    class ProductScoringRating << (V,lightgreen) >> {
+      textValue: String
+    }
+    
+    class ProductScoringMechanism << (V,lightgreen) >> {
+      key: String
+    }
+    
+    class ProductFamily << (A,orange) >> {
+      name: String
+      description: String
+      images: [Image]
+      actorId: ID
+      categories: [ProductCategory]
+      contributions: [ProductContribution]
+      ingredients: [ProductIngredient]
+    }
+    
+  }
+  
+  namespace OrderService {  
+
+    class Order << (A,orange) >> {
+        id: ID
+        key: String
+        name: String
+        status: String
+        date: Date
+        orderCycleId: ID
+    }
+    
+    
+    Order *--{ OrderItem : items
+    Order *-- OrderParty : buyer
+    Order *-- OrderParty : seller
+    Order *-- OrderShippingMethod : shippingMethod
+    Order *-- OrderPaymentMethod : paymentMethod
+    Order *.. OrderCycle
+
+    class OrderItem << (V,lightgreen) >> {
+        productId: ID
+        productFamilyId: ID
+        catalogItemId: ID
+        offerId: ID
+        name: String
+        quantity: Quantity
+    }
+    
+    OrderItem *.. Main.ProductService.Product
+    OrderItem *.. Main.ProductService.ProductFamily
+    
+    class OrderParty << (V,lightgreen) >> {
+      type: String
+      name: String
+      actorId: ID
+      officialId: String
+      bankAccountNumber: String
+      address: Address
+      shippingAddress: Address
+      billingAddress: Address
+    }
+    
+    OrderParty *.. Main.ActorService.Actor
+    
+    class OrderShippingMethod << (V,lightgreen) >> {
+        methodId: ID
+        name: String
+        description: String
+    } 
+    
+    class OrderPaymentMethod << (V,lightgreen) >> {
+        methodId: ID
+        name: String
+        description: String
+    } 
+
+    class OrderCycle << (A,orange) >> {
+        id: ID
+        key: String
+        name: String
+        status: String
+        actorId: ID
+        beginsAt: Date
+        endsAt: Date
+        inCatalogs: [Catalog]
+        outCatalogs: [Catalog]
+        schedules: [OrderCycleSchedule]
+    }
+
+    class OrderCycleSchedule << (A,orange) >> {
+        id: ID
+        key: String
+        name: String
+        actorId: ID
+    }
+    
+    OrderCycleSchedule }..{ OrderCycle
+
+    class Subscription << (A,orange) >> {
+        schedule: OrderCycleSchedule
+        status: String
+        beginsAt: Date
+        endsAt: Date
+    }
+    
+    Subscription <|-- Order : extends 
+    
+  }
+  
+}
+
+@enduml
