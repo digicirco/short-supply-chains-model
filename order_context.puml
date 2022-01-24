@@ -1,0 +1,155 @@
+@startuml
+
+header
+DRAFT
+Authors: Olivier Wouters
+Version: 0.1.0
+endheader
+
+legend right
+    | Color | Type |
+    |<#ff7f00>| A for Aggregate|
+    |<#90ee90>| V for ValueObject|
+endlegend
+
+title Order context
+
+namespace Main {
+  
+  class Address << (V,lightgreen) >> {
+    street: String
+    postCode: String
+    locality: String
+  }
+  
+  Address *-- AddressArea : country
+  Address *-- AddressArea : administrativeLevel1
+  Address *-- AddressArea : administrativeLevel2
+  
+  class AddressArea << (V,lightgreen) >> {
+    code: String
+    name: String
+  }
+  
+  AddressArea::code *.. Area
+  
+  class Area << (A,orange) >> {
+    type: AreaType
+    code: String
+    name: String
+  }
+  
+  Area .[hidden]. AreaType
+  
+  enum AreaType {
+      Country
+  }
+  
+  class Location << (V,lightgreen) >> {
+      type: String
+      coordinates: [Float]
+  }
+  
+  class Quantity << (V,lightgreen) >> {
+    value: Float
+  }
+  
+  Quantity *-- Unit : unit
+  
+  class Unit << (V,lightgreen) >> {
+    code: String
+    symbol: String
+    name: String
+  }
+
+  namespace OrderService {  
+
+    class Order << (A,orange) >> {
+        id: ID
+        key: String
+        name: String
+        enterpriseId: ID
+        status: String
+        date: Date
+        orderCycleId: ID
+    }
+    
+    Order *-right-{ OrderItem : items
+    Order *-left- OrderParty : buyer
+    Order *-left- OrderParty : seller
+    Order *-down- OrderShippingMethod : shippingMethod
+    Order *-down- OrderPaymentMethod : paymentMethod
+    Order *.. OrderCycle
+
+    class OrderItem << (V,lightgreen) >> {
+        productId: ID
+        productFamilyId: ID
+        catalogItemId: ID
+        offerId: ID
+        name: String
+    }
+    
+    OrderItem *-- Main.Quantity
+    
+    class OrderParty << (V,lightgreen) >> {
+      type: String
+      customerId: ID
+      enterpriseId: ID
+      name: String
+      officialId: String
+      bankAccountNumber: String
+    }
+    
+    OrderParty *-- Main.Address : address
+    OrderParty *-- Main.Address : shippingAddress
+    OrderParty *-- Main.Address : billingAddress
+    OrderParty *-- Main.Location : location
+    
+    class OrderShippingMethod << (V,lightgreen) >> {
+        methodId: ID
+        name: String
+        description: String
+    } 
+    
+    class OrderPaymentMethod << (V,lightgreen) >> {
+        methodId: ID
+        name: String
+        description: String
+    } 
+
+    class OrderCycle << (A,orange) >> {
+        id: ID
+        key: String
+        name: String
+        enterpriseId: ID
+        status: String
+        beginsAt: Date
+        endsAt: Date
+        inCatalogs: [Catalog]
+        outCatalogs: [Catalog]
+        schedules: [OrderCycleSchedule]
+    }
+
+    class OrderCycleSchedule << (A,orange) >> {
+        id: ID
+        key: String
+        name: String
+        enterpriseId: ID
+    }
+    
+    OrderCycleSchedule }..{ OrderCycle
+
+    class Subscription << (A,orange) >> {
+        schedule: OrderCycleSchedule
+        status: String
+        beginsAt: Date
+        endsAt: Date
+    }
+    
+    Subscription <|-- Order : extends 
+    
+  }
+  
+}
+
+@enduml
