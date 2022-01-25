@@ -3,7 +3,7 @@
 header
 DRAFT
 Authors: Olivier Wouters
-Version: 0.3.0
+Version: 0.3.2
 endheader
 
 legend right
@@ -13,7 +13,7 @@ legend right
     |<#0000FF>| U for Union|
 endlegend
 
-title Order context
+title Short food system context
 
 namespace Main {
   
@@ -302,6 +302,8 @@ namespace Main {
   namespace CatalogService {
   
     class Catalog << (A,orange) >> {
+      extends CommerceDocument
+      --
       name: String
       description: String
       actorId: ID
@@ -325,6 +327,8 @@ namespace Main {
   namespace OrderService {  
 
     class Order << (A,orange) >> {
+      extends CommerceDocument
+      --
         id: ID
         key: String
         name: String
@@ -333,14 +337,15 @@ namespace Main {
         orderCycleId: ID
         buyer: OrderParty
         seller: OrderParty
+        catalogIds: [Id]
     }
     
-    Order -left-|> Main.CommerceDocument : extends
     Order *--{ OrderItem : items
-    Order *-left- OrderParty
+    Order *-- OrderParty
     Order *-- OrderShippingMethod : shippingMethod
     Order *-- OrderPaymentMethod : paymentMethod
     Order *.. OrderCycle
+    Order *..{ Main.CatalogService.Catalog
 
     class OrderItem << (V,lightgreen) >> {
         productId: ID
@@ -352,19 +357,17 @@ namespace Main {
         quantity: Quantity
     }
     
-    OrderItem *.. Main.ProductService.ProductAndFamilyUnion
-    OrderItem *.. Main.OfferService.Offer
-    OrderItem *.. Main.InventoryService.InventoryItem
+    OrderItem *.. Main.CatalogService.CatalogItem
     
     class OrderParty << (V,lightgreen) >> {
+      extends CommerceDocumentParty
+      --
       actorId: ID
       officialId: String
       bankAccountNumber: String
       shippingAddress: Address
       billingAddress: Address
     }
-  
-    OrderParty --|> Main.CommerceDocumentParty : extends
     
     class OrderShippingMethod << (V,lightgreen) >> {
         methodId: ID
@@ -386,51 +389,58 @@ namespace Main {
         actorId: ID
         beginsAt: Date
         endsAt: Date
-        inCatalogs: [Catalog]
-        outCatalogs: [Catalog]
+        inCatalogIds: [ID]
+        outCatalogIds: [ID]
         schedules: [OrderCycleSchedule]
     }
+    
+    
+    OrderCycle *.. Main.CatalogService.Catalog
 
     class OrderCycleSchedule << (A,orange) >> {
-        id: ID
-        key: String
-        name: String
-        actorId: ID
+      TODO not very clear concept
+      --
+      id: ID
+      key: String
+      name: String
+      actorId: ID
     }
     
     OrderCycleSchedule }..{ OrderCycle
 
     class Subscription << (A,orange) >> {
-        schedule: OrderCycleSchedule
-        status: String
-        beginsAt: Date
-        endsAt: Date
+      schedule: OrderCycleSchedule
+      status: String
+      beginsAt: Date
+      endsAt: Date
     }
     
     Subscription <|-- Order : extends 
     
   }
   
-  namespace InvoiceService {
+  namespace InvoiceService  {
   
     class Invoice << (A,orange) >> {
+      extends CommerceDocument
+      --
       buyer: InvoiceParty
       seller: InvoiceParty
+      orderIds: [ID]
     }
-    
-    Invoice --|> Main.CommerceDocument : extends
     
     Invoice *-- InvoiceParty
     Invoice *-- InvoiceItem : items
+    Invoice *..{ Main.OrderService.Order
     
     class InvoiceParty << (V,lightgreen) >> {
+      extends CommerceDocumentParty
+      --
       actorId: ID
       officialId: String
       bankAccountNumber: String
       billingAddress: Address
     }
-  
-    InvoiceParty --|> Main.CommerceDocumentParty : extends
     
     class InvoiceItem {
       productId: ID
@@ -441,9 +451,7 @@ namespace Main {
       price: Price
     }
     
-    InvoiceItem *.. Main.ProductService.ProductAndFamilyUnion
-    InvoiceItem *.. Main.OfferService.Offer
-    InvoiceItem *.. Main.CatalogService.CatalogItem
+    InvoiceItem *.. Main.OrderService.OrderItem
   
   }
   
