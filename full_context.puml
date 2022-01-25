@@ -3,7 +3,7 @@
 header
 DRAFT
 Authors: Olivier Wouters
-Version: 0.4.0
+Version: 0.4.1
 endheader
 
 legend right
@@ -318,7 +318,7 @@ namespace Main {
       inventoryId: ID
     }
     
-    CatalogItem *.. Catalog
+    CatalogItem *.up. Catalog
     CatalogItem *.. Main.ProductService.ProductAndFamilyUnion
     CatalogItem *.. Main.OfferService.Offer
     CatalogItem *.. Main.InventoryService.InventoryItem
@@ -342,9 +342,9 @@ namespace Main {
     }
     
     Order *--{ OrderItem : items
-    Order *-- OrderParty
-    Order *-- OrderShippingMethod : shippingMethod
-    Order *-- OrderPaymentMethod : paymentMethod
+    Order *-up- OrderParty
+    Order *-up- OrderShippingMethod : shippingMethod
+    Order *-up- OrderPaymentMethod : paymentMethod
     Order *.. OrderCycle
     Order *..{ Main.CatalogService.Catalog
 
@@ -407,7 +407,7 @@ namespace Main {
       actorId: ID
     }
     
-    OrderCycleSchedule }..{ OrderCycle
+    OrderCycleSchedule }.left.{ OrderCycle
 
     class Subscription << (A,orange) >> {
       schedule: OrderCycleSchedule
@@ -457,12 +457,14 @@ namespace Main {
   namespace ShippingService  {
   
     class Shipment << (A,orange) >> {
+      sender: ShipmentParty
+      receiver: ShipmentParty
+      carrier: ShipmentParty
       orderIds: [ID]
     }
     
+    Shipment *-- ShipmentParty
     Shipment *.. Main.OrderService.Order
-    Shipment *-- ShipmentParty : sender
-    Shipment *-- ShipmentParty : receiver
     Shipment *--{ ShipmentItem : items
     Shipment *..{ Parcel : parcels
     
@@ -479,6 +481,7 @@ namespace Main {
       catalogItemId: ID
       inventoryItemId: ID
       quantity: Quantity
+      price: Price
     }
     
     ShipmentItem *.. Main.OrderService.OrderItem
@@ -501,13 +504,32 @@ namespace Main {
       quantity: Quantity
     }
     
-    class Container {
+    class Container << (A,orange) >> {
     }
     
+    class Pickup << (A,orange) >> {
+      sender: ShipmentParty
+      carrier: ShipmentParty
+      shipmentIds: [ID]
+      parcelIds: [ID]
+    }
     
+    Pickup *-- ShipmentParty
+    Pickup *..{ Shipment : shipments
+    Pickup *..{ Parcel : parcels
+    
+    class Dropoff << (A,orange) >> {
+      carrier: ShipmentParty
+      receiver: ShipmentParty
+      parcelIds: [ID]
+    }
+    
+    Dropoff *-up- ShipmentParty
+    Dropoff *..{ Parcel : parcels
   
   }
   
 }
+
 
 @enduml
