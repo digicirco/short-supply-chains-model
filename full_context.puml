@@ -3,13 +3,14 @@
 header
 DRAFT
 Authors: Olivier Wouters
-Version: 0.1.0
+Version: 0.2.0
 endheader
 
 legend right
     | Color | Type |
     |<#ff7f00>| A for Aggregate|
     |<#90ee90>| V for ValueObject|
+    |<#0000FF>| U for Union|
 endlegend
 
 title Order context
@@ -62,6 +63,25 @@ namespace Main {
     symbol: String
     name: String
   }
+  
+  class Price {
+  }
+  
+  Price *-- Quantity : quantity
+  Price *-- Money : money
+  
+  class Money {
+    value: Float
+  }
+  
+  Money *-- Currency : currency
+  
+  class Currency << (V,lightgreen) >> {
+    code: String
+    symbol: String
+    name: String
+  }
+  
   
   namespace ActorService {
   
@@ -157,7 +177,7 @@ namespace Main {
     }
     
     Product *-- ProductBrand : brand
-    Product *--{ ProductContribution : contributions
+    Product *-up-{ ProductContribution : contributions
     Product *--{ ProductCategory :  categories
     
     Product *--{ ProductPackaging : packagings
@@ -181,7 +201,7 @@ namespace Main {
     
     ProductContribution::actorId *.. Main.ActorService.Actor : actor
     ProductContribution *--{ ProductContributionRole : roles
-    ProductContribution::familyId *.up. ProductFamily : family
+    ProductContribution::familyId *.left. ProductFamily : family
     
     enum ProductContributionRoleType {
       Producer
@@ -234,6 +254,62 @@ namespace Main {
       ingredients: [ProductIngredient]
     }
     
+    class ProductAndFamilyUnion << (V,lightblue) >> {
+    
+    }
+    
+    ProductAndFamilyUnion *-- Product
+    ProductAndFamilyUnion *-- ProductFamily
+    
+  }
+  
+  namespace InventoryService {
+    class InventoryItem << (A,orange) >> {
+      actorId: ID
+      productId: ID
+      productFamilyId: ID
+      quantity: Quantity
+    }
+    
+    InventoryItem *.. Main.ProductService.ProductAndFamilyUnion
+  }
+  
+  namespace OfferService {
+  
+    class Offer << (A,orange) >> {
+      actorId: ID
+      productId: ID
+      productFamilyId: ID
+      inventoryId: ID
+      price: Price
+    }
+    
+    Offer *.. Main.ProductService.ProductAndFamilyUnion
+    Offer *.. Main.InventoryService.InventoryItem
+  
+  }
+  
+  namespace CatalogService {
+  
+    class Catalog << (A,orange) >> {
+      name: String
+      description: String
+      actorId: ID
+    }
+  
+    class CatalogItem << (A,orange) >> {
+      catalogId: ID
+      productId: ID
+      productFamilyId: ID
+      offerId: ID
+      inventoryId: ID
+    }
+    
+    CatalogItem *.. Catalog
+    CatalogItem *.. Main.ProductService.ProductAndFamilyUnion
+    CatalogItem *.. Main.OfferService.Offer
+    CatalogItem *.. Main.InventoryService.InventoryItem
+  
   }
   
   namespace OrderService {  
@@ -260,12 +336,14 @@ namespace Main {
         productFamilyId: ID
         catalogItemId: ID
         offerId: ID
+        inventoryItemId: ID
         name: String
         quantity: Quantity
     }
     
-    OrderItem *.. Main.ProductService.Product
-    OrderItem *.. Main.ProductService.ProductFamily
+    OrderItem *.. Main.ProductService.ProductAndFamilyUnion
+    OrderItem *.. Main.OfferService.Offer
+    OrderItem *.. Main.InventoryService.InventoryItem
     
     class OrderParty << (V,lightgreen) >> {
       type: String
