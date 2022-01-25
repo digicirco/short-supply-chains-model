@@ -3,14 +3,14 @@
 header
 DRAFT
 Authors: Olivier Wouters
-Version: 0.3.2
+Version: 0.3.3
 endheader
 
 legend right
     | Color | Type |
     |<#ff7f00>| A for Aggregate|
     |<#90ee90>| V for ValueObject|
-    |<#0000FF>| U for Union|
+    |<#ADD8E6>| U for Union|
 endlegend
 
 title Short food system context
@@ -157,18 +157,18 @@ namespace Main {
         lessThanPercentage: Float
       }
       
-      class ProductNutrientDailyValueIntakeReference {
+      class ProductNutrientDailyValueIntakeReference << (V,lightgreen) >> {
         lifestage: PersonLifestage
       }
       
       ProductNutrientDailyValueIntakeReference *--{ ProductNutrientValue : nutrientValues
       
-      class ProductNutrientReference {
+      class ProductNutrientReference << (V,lightgreen) >> {
         statement: String
         quantity: Quantity
       }
       
-      class ProductNutrientValue {
+      class ProductNutrientValue << (V,lightgreen) >> {
         key: String,
         quantity: Quantity
       }
@@ -264,7 +264,7 @@ namespace Main {
     
     ProductFamily *--{ Product
     
-    class ProductAndFamilyUnion << (V,lightblue) >> {
+    class ProductAndFamilyUnion << (U,lightblue) >> {
     
     }
     
@@ -442,7 +442,7 @@ namespace Main {
       billingAddress: Address
     }
     
-    class InvoiceItem {
+    class InvoiceItem << (V,lightgreen) >> {
       productId: ID
       productFamilyId: ID
       offerId: ID
