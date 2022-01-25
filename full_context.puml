@@ -3,7 +3,7 @@
 header
 DRAFT
 Authors: Olivier Wouters
-Version: 0.3.3
+Version: 0.4.0
 endheader
 
 legend right
@@ -90,6 +90,7 @@ namespace Main {
     name: String
     officialId: String
     address: Address
+    location: Location
   }
   
   
@@ -437,9 +438,7 @@ namespace Main {
       extends CommerceDocumentParty
       --
       actorId: ID
-      officialId: String
       bankAccountNumber: String
-      billingAddress: Address
     }
     
     class InvoiceItem << (V,lightgreen) >> {
@@ -452,6 +451,60 @@ namespace Main {
     }
     
     InvoiceItem *.. Main.OrderService.OrderItem
+  
+  }
+  
+  namespace ShippingService  {
+  
+    class Shipment << (A,orange) >> {
+      orderIds: [ID]
+    }
+    
+    Shipment *.. Main.OrderService.Order
+    Shipment *-- ShipmentParty : sender
+    Shipment *-- ShipmentParty : receiver
+    Shipment *--{ ShipmentItem : items
+    Shipment *..{ Parcel : parcels
+    
+    class ShipmentParty << (V,lightgreen) >> {
+      extends CommerceDocumentParty
+      --
+      actorId: ID
+    }
+    
+    class ShipmentItem << (V,lightgreen) >> {
+      productId: ID
+      productFamilyId: ID
+      offerId: ID
+      catalogItemId: ID
+      inventoryItemId: ID
+      quantity: Quantity
+    }
+    
+    ShipmentItem *.. Main.OrderService.OrderItem
+    
+    class Parcel << (A,orange) >> {
+    }
+    
+    Parcel --|> Package : extends
+    Parcel --|> Shipment : extends
+    
+    class Package << (A,orange) >> {
+    }
+    
+    Package *-- PackageItems : items
+    Package *-- Container : containers
+    
+    class PackageItems << (V,lightgreen) >> {
+      productId: ID
+      productFamilyId: ID
+      quantity: Quantity
+    }
+    
+    class Container {
+    }
+    
+    
   
   }
   
