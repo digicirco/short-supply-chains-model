@@ -3,7 +3,7 @@
 header
 DRAFT
 Authors: Olivier Wouters
-Version: 0.2.2
+Version: 0.3.0
 endheader
 
 legend right
@@ -64,13 +64,13 @@ namespace Main {
     name: String
   }
   
-  class Price {
+  class Price << (V,lightgreen) >> {
   }
   
   Price *-- Quantity : quantity
   Price *-- Money : money
   
-  class Money {
+  class Money << (V,lightgreen) >> {
     value: Float
   }
   
@@ -80,6 +80,16 @@ namespace Main {
     code: String
     symbol: String
     name: String
+  }
+  
+  class CommerceDocument << (A,orange) >> {
+  }
+  
+  class CommerceDocumentParty << (V,lightgreen) >> {
+    type: String
+    name: String
+    officialId: String
+    address: Address
   }
   
   
@@ -285,7 +295,7 @@ namespace Main {
     }
     
     Offer *.. Main.ProductService.ProductAndFamilyUnion
-    Offer *.right. Main.InventoryService.InventoryItem
+    Offer *.. Main.InventoryService.InventoryItem
   
   }
   
@@ -321,12 +331,13 @@ namespace Main {
         status: String
         date: Date
         orderCycleId: ID
+        buyer: OrderParty
+        seller: OrderParty
     }
     
-    
+    Order -left-|> Main.CommerceDocument : extends
     Order *--{ OrderItem : items
-    Order *-- OrderParty : buyer
-    Order *-- OrderParty : seller
+    Order *-left- OrderParty
     Order *-- OrderShippingMethod : shippingMethod
     Order *-- OrderPaymentMethod : paymentMethod
     Order *.. OrderCycle
@@ -346,17 +357,14 @@ namespace Main {
     OrderItem *.. Main.InventoryService.InventoryItem
     
     class OrderParty << (V,lightgreen) >> {
-      type: String
-      name: String
       actorId: ID
       officialId: String
       bankAccountNumber: String
-      address: Address
       shippingAddress: Address
       billingAddress: Address
     }
-    
-    OrderParty *.. Main.ActorService.Actor
+  
+    OrderParty --|> Main.CommerceDocumentParty : extends
     
     class OrderShippingMethod << (V,lightgreen) >> {
         methodId: ID
@@ -401,6 +409,42 @@ namespace Main {
     
     Subscription <|-- Order : extends 
     
+  }
+  
+  namespace InvoiceService {
+  
+    class Invoice << (A,orange) >> {
+      buyer: InvoiceParty
+      seller: InvoiceParty
+    }
+    
+    Invoice --|> Main.CommerceDocument : extends
+    
+    Invoice *-- InvoiceParty
+    Invoice *-- InvoiceItem : items
+    
+    class InvoiceParty << (V,lightgreen) >> {
+      actorId: ID
+      officialId: String
+      bankAccountNumber: String
+      billingAddress: Address
+    }
+  
+    InvoiceParty --|> Main.CommerceDocumentParty : extends
+    
+    class InvoiceItem {
+      productId: ID
+      productFamilyId: ID
+      offerId: ID
+      catalogItemId: ID
+      quantity: Quantity
+      price: Price
+    }
+    
+    InvoiceItem *.. Main.ProductService.ProductAndFamilyUnion
+    InvoiceItem *.. Main.OfferService.Offer
+    InvoiceItem *.. Main.CatalogService.CatalogItem
+  
   }
   
 }
