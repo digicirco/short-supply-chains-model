@@ -3,7 +3,7 @@
 header
 DRAFT
 Authors: Olivier Wouters
-Version: 0.2.0
+Version: 0.2.1
 endheader
 
 legend right
@@ -195,13 +195,11 @@ namespace Main {
     
     class ProductContribution << (V,lightgreen) >> {
         actorId: Id
-        productFamilyId: Id
         isMain: Boolean
     }
     
     ProductContribution::actorId *.. Main.ActorService.Actor : actor
     ProductContribution *--{ ProductContributionRole : roles
-    ProductContribution::familyId *.left. ProductFamily : family
     
     enum ProductContributionRoleType {
       Producer
@@ -253,6 +251,8 @@ namespace Main {
       contributions: [ProductContribution]
       ingredients: [ProductIngredient]
     }
+    
+    ProductFamily *--{ Product
     
     class ProductAndFamilyUnion << (V,lightblue) >> {
     
