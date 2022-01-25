@@ -3,7 +3,7 @@
 header
 DRAFT
 Authors: Olivier Wouters
-Version: 0.2.1
+Version: 0.2.2
 endheader
 
 legend right
@@ -285,7 +285,7 @@ namespace Main {
     }
     
     Offer *.. Main.ProductService.ProductAndFamilyUnion
-    Offer *.. Main.InventoryService.InventoryItem
+    Offer *.right. Main.InventoryService.InventoryItem
   
   }
   
