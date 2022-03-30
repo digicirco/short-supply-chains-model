@@ -1,0 +1,72 @@
+{
+    "number": "R873202186",
+    "date": "2022-03-30",
+    "confirmed": true,
+    "buyer": {
+        "name": "Olivier Wouters",
+        "email": "olivier5741@gmail.com",
+        "phone": "+32476283271",
+        "customer": {
+            "id": ""
+        },
+        "person": {
+            "id": ""
+        }
+    },
+    "seller": {
+        "name": "Comptoir Demo OFN",
+        "enterprise": {
+            "id": ""
+        }
+    },
+    "broker": {
+        "name": "Open food network Belgium",
+        "marketplace": {
+            "id": ""
+        }
+    },
+    "shipping_method": {
+        "id": "",
+        "name": "Livraison par Bpost",
+        "description": "La commande vous sera livrée dans les 2 jours ouvrables après la date choisie lors de votre commande -  vu les circonstances ce délai peut-être plus long.\r\n\r\nExemple : si commande prête pour le lundi 20/04, elle vous sera livrée vers le 22/04."
+    },
+    "shipping_address": {
+        "name": "Olivier Wouters",
+        "phone": "+32477283271",
+        "street_address": "Grand rue 37",
+        "postal_code": "6850",
+        "locality": "Carlsbourg",
+        "country": {
+            "name": "Belgium"
+        },
+        "place": {
+            "id": ""
+        }
+    },
+    "items": [
+        {
+            "name": "Carrots (bulk)",
+            "gtin": "",
+            "sku": "",
+            "quantity": {
+                "value": 5,
+                "unit": {
+                    "text": "kilogramme",
+                    "code": "KGM",
+                    "symbol": "kg"
+                }
+            },
+            "price": {
+                "value": 2.3,
+                "currency": {
+                    "text": "euro",
+                    "code": "EUR",
+                    "symbol": "€"
+                }
+            },
+            "product": {
+                "id": ""
+            }
+        }
+    ]
+}
